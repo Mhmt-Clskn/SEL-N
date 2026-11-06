@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>selin.py</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --line:#30363d; --txt:#c9d1d9; --dim:#8b949e;
+    --green:#7ee787; --blue:#79c0ff; --purple:#d2a8ff; --orange:#ffa657; --str:#a5d6ff;
+    --red:#ff5c7a; --pink:#ff9bb3;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%}
+  body{
+    background:radial-gradient(ellipse at top,#1f1a26 0%,var(--bg) 60%);
+    color:var(--txt); font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+    display:flex;align-items:center;justify-content:center;padding:16px;min-height:100vh;overflow-x:hidden;
+  }
+  .win{
+    position:relative;z-index:2;width:100%;max-width:520px;background:rgba(22,27,34,.94);border:1px solid var(--line);
+    border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);overflow:hidden;
+  }
+  .bar{display:flex;align-items:center;gap:7px;padding:10px 14px;border-bottom:1px solid var(--line);background:#0f141b}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .bar .t{margin-left:8px;font-size:12px;color:var(--dim)}
+  .body{padding:18px 16px 22px;font-size:13.5px;line-height:1.65;min-height:420px}
+  .ln{white-space:pre-wrap;word-break:break-word}
+  .p{color:var(--green)} .k{color:var(--purple)} .f{color:var(--blue)} .s{color:var(--str)}
+  .c{color:var(--dim);font-style:italic} .o{color:var(--orange)} .r{color:var(--red)} .d{color:var(--dim)}
+  .cur{display:inline-block;width:8px;height:1.1em;background:var(--txt);vertical-align:-2px;animation:b 1s steps(1) infinite}
+  @keyframes b{50%{opacity:0}}
+  .start{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;min-height:380px;text-align:center}
+  .start .hi{font-size:15px;color:var(--dim);line-height:1.8}
+  .start .hi b{color:var(--txt)} .start .hi .nm{color:var(--pink);font-size:20px;font-weight:700}
+  button{
+    font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;
+    background:var(--green);color:#0d1117;border:0;border-radius:8px;padding:12px 26px;
+    box-shadow:0 0 0 0 rgba(126,231,135,.5);animation:pulse 2s infinite;
+  }
+  @keyframes pulse{70%{box-shadow:0 0 0 14px rgba(126,231,135,0)}100%{box-shadow:0 0 0 0 rgba(126,231,135,0)}}
+  button.ghost{background:transparent;color:var(--pink);border:1px solid var(--pink);animation:none;font-size:13px;padding:9px 16px}
+  #heart{font-size:10px;line-height:1.05;letter-spacing:1px;text-align:center;margin:14px 0 6px;color:var(--red);
+         text-shadow:0 0 8px rgba(255,92,122,.6)}
+  #heart span{opacity:0;transition:opacity .25s}
+  #heart span.on{opacity:1}
+  .beat{animation:beat 1.2s ease-in-out infinite}
+  @keyframes beat{0%,100%{transform:scale(1)}15%{transform:scale(1.07)}30%{transform:scale(1)}45%{transform:scale(1.05)}}
+  .msg{text-align:center;font-size:16px;margin-top:10px;color:var(--pink);opacity:0;transition:opacity 1.2s;line-height:1.7}
+  .msg.on{opacity:1}
+  .msg b{font-size:19px}
+  .msg .miss{display:inline-block;font-size:24px;font-weight:700;color:var(--red);letter-spacing:1px;margin-top:4px;
+             text-shadow:0 0 12px rgba(255,92,122,.6);animation:beat 1.2s ease-in-out infinite}
+  .btns{display:flex;justify-content:center;gap:10px;margin-top:18px;flex-wrap:wrap;opacity:0;transition:opacity 1s}
+  .btns.on{opacity:1}
+  #extra{margin-top:12px}
+
+  /* bouquet */
+  #bouquet{display:block;width:100%;max-width:340px;margin:18px auto 0}
+  .stem{stroke:#5aa86a;stroke-width:3;fill:none;stroke-linecap:round;stroke-dasharray:200;stroke-dashoffset:200;transition:stroke-dashoffset 1.3s ease-out}
+  .stem.on{stroke-dashoffset:0}
+  .leaf{fill:#4f9a5e;transform:scale(0);transform-origin:0 0;transition:transform .8s cubic-bezier(.3,1.4,.5,1)}
+  .leaf.on{transform:scale(1)}
+  .bloom{transform:scale(0) rotate(-40deg);transform-origin:0 0;transition:transform 1.6s cubic-bezier(.25,1.3,.4,1)}
+  .bloom.on{transform:scale(1) rotate(0)}
+  .sway{animation:sway 4s ease-in-out infinite;transform-origin:0 0}
+  @keyframes sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+  .caption{text-align:center;color:var(--dim);font-size:11px;margin-top:4px;opacity:0;transition:opacity 1s}
+  .caption.on{opacity:1}
+
+  /* falling petals */
+  .petal{position:fixed;top:-30px;z-index:1;pointer-events:none;border-radius:150% 0 150% 0;opacity:.85;
+         animation:fall linear forwards}
+  @keyframes fall{
+    0%{transform:translate(0,0) rotate(0)}
+    100%{transform:translate(var(--dx),110vh) rotate(var(--rot))}
+  }
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="bar">
+    <span class="dot" style="background:#ff5f57"></span>
+    <span class="dot" style="background:#febc2e"></span>
+    <span class="dot" style="background:#28c840"></span>
+    <span class="t">~/kalbim/selin.py</span>
+  </div>
+  <div class="body" id="out">
+    <div class="start" id="start">
+      <div class="hi"><span class="nm">SELİNİM🤍</span><br>Senin için küçük bir program yazdım.<br><b>Çalıştırmak ister misin aşkım?</b></div>
+      <button id="run">▶ Çalıştır</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const out = document.getElementById('out');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const NS='http://www.w3.org/2000/svg';
+
+const code = [
+  [['k','from'],['',' kalbim '],['k','import'],['',' selin']],
+  [],
+  [['k','def'],['f',' gunum'],['','():']],
+  [['','    '],['k','if'],['',' selin.gulumsedi():']],
+  [['','        '],['k','return'],['s',' "güzel"']],
+  [['','    '],['k','return'],['s',' "aşkımla mesai yapmam lazım"']],
+  [],
+  [['','buket = ['],['s','"lilyum"'],['',', '],['s','"şakayık"'],['',']']],
+  [],
+  [['k','while'],['o',' True'],['',':']],
+  [['','    '],['','kalbim.'],['f','ekle'],['','('],['s','"aşkım"'],[''  ,')  '],['c','# bilerek sonsuz'],],
+];
+
+function line(html=''){ const d=document.createElement('div'); d.className='ln'; d.innerHTML=html; out.appendChild(d); return d; }
+function cursor(el){ const c=document.createElement('span'); c.className='cur'; el.appendChild(c); return c; }
+
+async function typeSegs(segs, speed=26){
+  const el=line(); const cur=cursor(el);
+  for(const [cls,txt] of segs){
+    const sp=document.createElement('span'); if(cls) sp.className=cls; el.insertBefore(sp,cur);
+    for(const ch of txt){ sp.textContent+=ch; await sleep(ch===' '?speed/2:speed+Math.random()*22); }
+  }
+  cur.remove(); return el;
+}
+
+async function progress(label){
+  const el=line(); const w=16;
+  for(let i=0;i<=w;i++){
+    el.innerHTML=`<span class="d">${label}</span> <span class="p">${'█'.repeat(i)}</span><span class="d">${'░'.repeat(w-i)}</span> ${Math.round(i/w*100)}%`;
+    await sleep(55+Math.random()*60);
+  }
+}
+
+function buildHeart(){
+  const h=document.createElement('pre'); h.id='heart';
+  const W=34,H=17; const spans=[];
+  for(let r=0;r<H;r++){
+    for(let c=0;c<W;c++){
+      const x=(c-W/2+.5)/(W/2)*1.25, y=-(r-H/2+.5)/(H/2)*1.25+0.15;
+      const v=Math.pow(x*x+y*y-1,3)-x*x*y*y*y;
+      if(v<=0){ const s=document.createElement('span'); s.textContent=Math.random()<.5?'0':'1'; s.dataset.d=Math.hypot(x,y+0.2); h.appendChild(s); spans.push(s); }
+      else h.appendChild(document.createTextNode(' '));
+    }
+    h.appendChild(document.createTextNode('\n'));
+  }
+  return [h,spans];
+}
+
+/* ---------- flowers ---------- */
+function el(tag,attrs,parent){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(parent) parent.appendChild(e); return e; }
+
+function peony(parent){
+  const g=el('g',{},parent);
+  const layers=[
+    {n:11,r:46,w:30,c:'url(#pk1)'},
+    {n:9, r:36,w:26,c:'url(#pk2)'},
+    {n:8, r:26,w:20,c:'url(#pk3)'},
+    {n:6, r:16,w:14,c:'url(#pk4)'},
+  ];
+  layers.forEach((L,li)=>{
+    for(let i=0;i<L.n;i++){
+      const a=360/L.n*i + li*17;
+      const r=L.r, w=L.w;
+      el('path',{d:`M0,0 C ${w},-${r*.25} ${w*.8},-${r} 0,-${r+4} C -${w*.8},-${r} -${w},-${r*.25} 0,0Z`,
+        fill:L.c, stroke:'rgba(160,30,70,.25)', 'stroke-width':'.6', transform:`rotate(${a})`},g);
+    }
+  });
+  el('circle',{r:6,fill:'#c2306a',opacity:.8},g);
+  return g;
+}
+
+function lily(parent){
+  const g=el('g',{},parent);
+  for(let i=0;i<6;i++){
+    const a=60*i+(i%2?0:30);
+    const len=i%2?52:46;
+    el('path',{d:`M0,0 C 14,-${len*.3} 11,-${len*.75} 0,-${len} C -11,-${len*.75} -14,-${len*.3} 0,0Z`,
+      fill:'url(#lw)', stroke:'rgba(200,120,150,.35)', 'stroke-width':'.7', transform:`rotate(${a})`},g);
+    el('path',{d:`M0,-4 Q 1.5,-${len*.4} 0,-${len*.7}`,stroke:'#e8789a','stroke-width':'1.4',fill:'none',opacity:.7,transform:`rotate(${a})`},g);
+    for(let k=0;k<4;k++){ const yy=-(10+k*6); el('circle',{cx:(k%2?2.5:-2.5),cy:yy,r:.9,fill:'#c2306a',opacity:.6,transform:`rotate(${a})`},g); }
+  }
+  for(let i=0;i<6;i++){
+    const a=60*i+10;
+    el('line',{x1:0,y1:0,x2:0,y2:-22,stroke:'#cfe6a6','stroke-width':'1',transform:`rotate(${a})`},g);
+    el('ellipse',{cx:0,cy:-23,rx:2.2,ry:3.6,fill:'#d9792b',transform:`rotate(${a})`},g);
+  }
+  el('circle',{r:3,fill:'#cfe6a6'},g);
+  return g;
+}
+
+function bud(parent,color){
+  const g=el('g',{},parent);
+  el('path',{d:'M0,0 C 7,-6 6,-18 0,-24 C -6,-18 -7,-6 0,0Z',fill:color},g);
+  return g;
+}
+
+function buildBouquet(){
+  const svg=el('svg',{id:'bouquet',viewBox:'0 0 320 260'});
+  const defs=el('defs',{},svg);
+  const grad=(id,stops,r=true)=>{ const gg=el(r?'radialGradient':'linearGradient',r?{id}:{id,x1:0,y1:1,x2:0,y2:0},defs); stops.forEach(([o,c])=>el('stop',{offset:o,'stop-color':c},gg)); };
+  grad('pk1',[['0','#ffd1dc'],['1','#f48aa8']]);
+  grad('pk2',[['0','#ffc0d0'],['1','#ee6f95']]);
+  grad('pk3',[['0','#ffb0c4'],['1','#e55a85']]);
+  grad('pk4',[['0','#f78fae'],['1','#d6416f']]);
+  grad('lw',[['0','#ffe4ec'],['.45','#fff8fa'],['1','#ffffff']],false);
+
+  const stems=el('g',{},svg), leaves=el('g',{},svg), flowers=el('g',{},svg);
+  const base=[160,255];
+  const heads=[
+    {x:160,y:95, type:'peony', d:0},
+    {x:78, y:118,type:'lily',  d:1},
+    {x:244,y:112,type:'lily',  d:2},
+    {x:112,y:58, type:'lilyS', d:3},
+    {x:214,y:60, type:'peonyS',d:4},
+    {x:38, y:72, type:'bud',   d:5, c:'#f48aa8'},
+    {x:284,y:70, type:'bud',   d:6, c:'#ffe4ec'},
+  ];
+  const stemEls=[], leafEls=[], bloomEls=[];
+  heads.forEach(h=>{
+    const mx=(h.x+base[0])/2+(h.x<160?-12:12), my=(h.y+base[1])/2+20;
+    stemEls.push(el('path',{class:'stem',d:`M${base[0]},${base[1]} Q ${mx},${my} ${h.x},${h.y}`},stems));
+  });
+  [[118,190,-35],[202,186,35],[96,160,-60],[226,150,60],[150,210,-15]].forEach(([x,y,a])=>{
+    const t=el('g',{transform:`translate(${x},${y}) rotate(${a})`},leaves);
+    leafEls.push(el('path',{class:'leaf',d:'M0,0 C 10,-10 10,-30 0,-42 C -10,-30 -10,-10 0,0Z'},t));
+  });
+  heads.slice().sort((a,b)=>(a.type==='peony')-(b.type==='peony')).forEach(h=>{
+    const outer=el('g',{transform:`translate(${h.x},${h.y})`},flowers);
+    const sw=el('g',{class:'sway',style:`animation-delay:${-h.d*0.7}s`},outer);
+    const b=el('g',{class:'bloom'},sw);
+    let f;
+    if(h.type==='peony') f=peony(b);
+    else if(h.type==='peonyS'){ f=peony(b); f.setAttribute('transform','scale(.62)'); }
+    else if(h.type==='lily') f=lily(b);
+    else if(h.type==='lilyS'){ f=lily(b); f.setAttribute('transform','scale(.75) rotate(20)'); }
+    else f=bud(b,h.c);
+    bloomEls.push({el:b,order:h.d});
+  });
+  bloomEls.sort((a,b)=>a.order-b.order);
+  return {svg,stemEls,leafEls,bloomEls};
+}
+
+/* ---------- petals ---------- */
+let petalTimer=null;
+function petal(){
+  const p=document.createElement('div'); p.className='petal';
+  const isLily=Math.random()<.35;
+  const s=8+Math.random()*10;
+  p.style.width=s+'px'; p.style.height=(s*(isLily?1.6:1))+'px';
+  p.style.background=isLily?'linear-gradient(#fff,#ffe1ea)':`hsl(${340+Math.random()*12},${70+Math.random()*20}%,${72+Math.random()*12}%)`;
+  p.style.left=(Math.random()*100)+'vw';
+  p.style.setProperty('--dx',((Math.random()-.5)*160)+'px');
+  p.style.setProperty('--rot',((Math.random()-.5)*720)+'deg');
+  const dur=6+Math.random()*5; p.style.animationDuration=dur+'s';
+  document.body.appendChild(p); setTimeout(()=>p.remove(),dur*1000+100);
+}
+function startPetals(){ if(petalTimer) return; for(let i=0;i<6;i++) setTimeout(petal,i*250); petalTimer=setInterval(petal,420); }
+
+/* ---------- main ---------- */
+async function run(){
+  out.innerHTML='';
+  const p=line(); p.innerHTML='<span class="p">➜</span> <span class="f">~</span> ';
+  const sp=document.createElement('span'); p.appendChild(sp); const cur=cursor(p);
+  for(const ch of 'python3 selin.py'){ sp.textContent+=ch; await sleep(55); }
+  cur.remove(); await sleep(400);
+
+  line('<span class="c"># selin.py — sadece senin için</span>');
+  for(const segs of code){ if(!segs.length){ line(' '); await sleep(110); continue; } await typeSegs(segs); }
+  await sleep(450);
+  line(' ');
+  await progress('duygular derleniyor');
+  line('<span class="p">✓</span> 0 hata, 0 uyarı');
+  await sleep(300);
+  line('<span class="o">⚠</span> <span class="o">1 not:</span> seni çok seviyorum aşkım');
+  await sleep(700);
+
+  const [h,spans]=buildHeart(); out.appendChild(h);
+  spans.sort((a,b)=>a.dataset.d-b.dataset.d);
+  for(let i=0;i<spans.length;i+=6){ for(let j=i;j<i+6&&j<spans.length;j++) spans[j].classList.add('on'); await sleep(14); }
+  h.classList.add('beat');
+  setInterval(()=>{ for(let k=0;k<8;k++){ const s=spans[Math.floor(Math.random()*spans.length)]; s.textContent=s.textContent==='0'?'1':'0'; } },120);
+
+  const m=document.createElement('div'); m.className='msg';
+  m.innerHTML='<b>SELİNİM</b> ❤<br><span class="miss">BEBEĞİM ÇOOOOKKK ÖZLEDİİİMM</span>';
+  out.appendChild(m); await sleep(100); m.classList.add('on');
+  await sleep(1200);
+
+  line(' ');
+  line('<span class="p">&gt;&gt;&gt;</span> buket.<span class="f">ac</span>()');
+  await sleep(500);
+  const B=buildBouquet(); out.appendChild(B.svg);
+  const cap=document.createElement('div'); cap.className='caption'; cap.textContent='lilyumlar ve şakayıklar, en sevdiklerin 🌸'; out.appendChild(cap);
+  B.svg.scrollIntoView({behavior:'smooth',block:'center'});
+  await sleep(100);
+  B.stemEls.forEach(s=>s.classList.add('on'));
+  await sleep(900);
+  for(const l of B.leafEls){ l.classList.add('on'); await sleep(120); }
+  for(const b of B.bloomEls){ b.el.classList.add('on'); await sleep(380); }
+  startPetals();
+  await sleep(800);
+  cap.classList.add('on');
+
+  await sleep(900);
+  const bt=document.createElement('div'); bt.className='btns';
+  bt.innerHTML='<button class="ghost" id="how">Ne kadar seviyorsun?</button><button class="ghost" id="again">↻ Tekrar çalıştır</button>';
+  out.appendChild(bt); await sleep(50); bt.classList.add('on');
+  const ex=document.createElement('div'); ex.id='extra'; out.appendChild(ex);
+
+  let n=0;
+  document.getElementById('how').onclick=()=>{
+    n++;
+    if(n===1){ ex.innerHTML='<div class="ln"><span class="p">&gt;&gt;&gt;</span> len(selin_sevgisi)<br><span class="d">hesaplanıyor…</span></div>';
+      setTimeout(()=>{ ex.innerHTML+='<div class="ln"><span class="r">OverflowError:</span> değer çok büyük, hiçbir veri tipine sığmıyor</div>'; },900); }
+    if(n===2) ex.innerHTML+='<div class="ln"><span class="p">&gt;&gt;&gt;</span> float("inf") &gt;= selin_sevgisi<br><span class="o">False</span></div>';
+    if(n===3) ex.innerHTML+='<div class="ln"><span class="c"># kanıtlandı: sonsuzdan bile fazla, aşkım</span></div>';
+    if(n>=3){ for(let i=0;i<14;i++) setTimeout(petal,i*60); }
+  };
+  document.getElementById('again').onclick=()=>location.reload();
+}
+
+document.getElementById('run').onclick=run;
+</script>
+</body>
+</html>
